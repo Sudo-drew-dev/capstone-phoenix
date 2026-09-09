@@ -28,10 +28,18 @@ resource "aws_security_group" "main" {
   }
 
   ingress {
-    description = "Node-to-node traffic (k3s, pod networking)"
-    from_port   = 0
-    to_port     = 65535
+    description = "kubectl access from my IP only"
+    from_port   = 6443
+    to_port     = 6443
     protocol    = "tcp"
+    cidr_blocks = [var.my_ip_cidr]
+  }
+
+  ingress {
+    description = "Node-to-node traffic (k3s, pod networking, Flannel VXLAN)"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     self        = true
   }
 
@@ -45,14 +53,4 @@ resource "aws_security_group" "main" {
   tags = {
     Name = "${var.project_name}-sg"
   }
-}
-
-resource "aws_security_group_rule" "kubectl_api" {
-  type              = "ingress"
-  from_port         = 6443
-  to_port           = 6443
-  protocol          = "tcp"
-  cidr_blocks       = [var.my_ip_cidr]
-  security_group_id = aws_security_group.main.id
-  description       = "kubectl access from my IP only"
 }
