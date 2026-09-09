@@ -1,0 +1,31 @@
+- name: Download and install k3s server
+  shell: curl -sfL https://get.k3s.io | sh -s - server --write-kubeconfig-mode 644
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: Allow kubectl API access from my IP
+  community.general.ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+    src: "{{ my_ip }}"
+
+- name: Wait for node-token to exist
+  wait_for:
+    path: /var/lib/rancher/k3s/server/node-token
+    state: present
+
+- name: Read the node token
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: node_token_raw
+
+- name: Save node token as a fact
+  set_fact:
+    k3s_node_token: "{{ node_token_raw.content | b64decode | trim }}"
+
+- name: Fetch kubeconfig to local machine
+  fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: ./kubeconfig
+    flat: yes

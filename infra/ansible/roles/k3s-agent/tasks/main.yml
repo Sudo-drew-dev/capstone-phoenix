@@ -1,0 +1,8 @@
+- name: Download and install k3s agent
+  shell: >
+    curl -sfL https://get.k3s.io |
+    K3S_URL=https://{{ hostvars[groups['control_plane'][0]]['private_ip'] }}:6443
+    K3S_TOKEN={{ hostvars[groups['control_plane'][0]]['k3s_node_token'] }}
+    sh -s -
+  args:
+    creates: /usr/local/bin/k3s-agent
