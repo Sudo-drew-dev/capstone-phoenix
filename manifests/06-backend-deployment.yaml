@@ -17,6 +17,7 @@ spec:
       labels:
         app: backend
     spec:
+      terminationGracePeriodSeconds: 30
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
@@ -37,6 +38,10 @@ spec:
           command: ["/opt/venv/bin/gunicorn", "--workers", "3", "--bind", "0.0.0.0:5000", "--access-logfile", "-", "run:app"]
           ports:
             - containerPort: 5000
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
           envFrom:
             - configMapRef:
                 name: taskapp-config
@@ -59,4 +64,3 @@ spec:
             limits:
               cpu: "500m"
               memory: "256Mi"
-
